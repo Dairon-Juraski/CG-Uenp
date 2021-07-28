@@ -1,4 +1,4 @@
-# CG-Uenp
-CG - UENP
+# Computer_Graphics
+Computer_Graphics - UENP
 
-link: https://dairon-juraski.github.io/CG-Uenp/
+link: https://dairon-juraski.github.io/Computer_Graphics
