@@ -2,7 +2,6 @@ var image = document.getElementById('image');
 var canvas = document.getElementById('image-canvas');
 var compare = document.getElementById('compare');
 var context = null;
-var contextCompare = compare.getContext('2D');
 var degree = 0;
 
 //function to load the image
@@ -13,8 +12,17 @@ let load = function () {
     context.drawImage(image, 0, 0);
 }
 
+//function to compare the image
+let createCompare = function () {
+    contextCompare = compare.getContext('2d');
+    compare.width = canvas.width;
+    compare.height = canvas.height;
+    contextCompare.drawImage(canvas, 0, 0);
+}
+
 //funciton to rotate the image
 let rotate = function () {
+    createCompare();
     // coletando informações da imagem 
     context.getImageData(0, 0, canvas.width, canvas.height);
     // salvando as iformações anteriores
@@ -33,6 +41,7 @@ let rotate = function () {
 
 //function to apply Gaussian_Blur
 let gaussianBlur = function () {
+    createCompare();
     let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     //varaiavel para armazenamento dos pixels da imagem
     let px = imageData.data;
@@ -58,6 +67,7 @@ let gaussianBlur = function () {
 
 //function to apply Median_Blur
 let median = function () {
+    createCompare();
     let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     let img = new MatrixImage(imageData);
     for (var i = 0; i < img.width; i++) {
@@ -96,6 +106,7 @@ let median = function () {
 
 //function to calculate de median of a array in js
 let calcMedian = function (arr) {
+
     var half = Math.floor(arr.length / 2);
     arr.sort((a, b) => a - b);
 
@@ -107,6 +118,7 @@ let calcMedian = function (arr) {
 
 //function to apply Mean_Blur
 let mean = function () {
+    createCompare();
     let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     let img = new MatrixImage(imageData);
 
@@ -146,6 +158,7 @@ let mean = function () {
 
 //function to apply the Gray_scale by Mean
 let grayScale = function () {
+    createCompare();
     var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     var data = imageData.data;
     for (var i = 0; i < data.length; i += 4) {
@@ -156,24 +169,28 @@ let grayScale = function () {
         data[i] = data[i + 1] = data[i + 2] = gray;
     }
     context.putImageData(imageData, 0, 0);
+
+
 }
 
 //function to apply the Gray_scale by Mean 2
-let redMeanGrayScale = function () {
+let channelMeanGrayScale = function () {
+    createCompare();
     let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     let img = new MatrixImage(imageData);
+    let aux = red;
     for (var i = 0; i < img.width; i++) {
         for (var j = 0; j < img.height; j++) {
             var pixel = Array();
-            pixel.push(img.getPixel(i - 1, j - 1).red);
-            pixel.push(img.getPixel(i - 1, j).red);
-            pixel.push(img.getPixel(i, j - 1).red);
-            pixel.push(img.getPixel(i + 1, j - 1).red);
-            pixel.push(img.getPixel(i, j).red);
-            pixel.push(img.getPixel(i - 1, j + 1).red);
-            pixel.push(img.getPixel(i, j + 1).red);
-            pixel.push(img.getPixel(i + 1, j).red);
-            pixel.push(img.getPixel(i + 1, j + 1).red);
+            pixel.push(img.getPixel(i - 1, j - 1).aux);
+            pixel.push(img.getPixel(i - 1, j).aux);
+            pixel.push(img.getPixel(i, j - 1).aux);
+            pixel.push(img.getPixel(i + 1, j - 1).aux);
+            pixel.push(img.getPixel(i, j).aux);
+            pixel.push(img.getPixel(i - 1, j + 1).aux);
+            pixel.push(img.getPixel(i, j + 1).aux);
+            pixel.push(img.getPixel(i + 1, j).aux);
+            pixel.push(img.getPixel(i + 1, j + 1).aux);
             var gray = pixel.reduce((a, b) => a + b, 0) / 9;
 
             img.setPixel(i, j, new RGBColor(gray, gray, gray));
@@ -184,22 +201,26 @@ let redMeanGrayScale = function () {
 
 //function to apply the Gray_scale NTSC
 let grayScaleNTSC = function () {
+    createCompare();
     var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     var data = imageData.data;
     for (var i = 0; i < data.length; i += 4) {
         var red = data[i];
         var green = data[i + 1];
         var blue = data[i + 2];
-        var gray = (red * 0.33 + green * 0.71 + blue * 0.08);
 
+        var gray = (red * 0.33 + green * 0.71 + blue * 0.08);
         //var gray = (red * 0.67 + green * 0.21 + blue * 0.14); //velha forma
+
         data[i] = data[i + 1] = data[i + 2] = gray;
     }
     context.putImageData(imageData, 0, 0);
 }
 
+//function to apply the Limiarization
 let monoScale = function () {
-    var threshold = 95;
+    createCompare();
+    var threshold = parseInt(prompt("Threshold:"));
     var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     var data = imageData.data;
     for (var i = 0; i < data.length; i += 4) {
@@ -245,41 +266,37 @@ class MatrixImage {
     }
 }
 
-let createCompare = function () {
-    compare.width = canvas.width;
-    compare.height = canvas.height;
-    contextCompare.drawImage(canvas, 0, 0);
+//function to resize the image
+let resize = function () {
+    createCompare();
+    // set size proportional to image
+    canvas.height = canvas.width * (image.height / image.width);
+
+    // step 1 - resize to 50%
+    var oc = document.createElement('canvas'),
+        octx = oc.getContext('2d');
+
+    oc.width = image.width * 0.1;
+    oc.height = image.height * 0.1;
+    octx.drawImage(image, 0, 0, oc.width, oc.height);
+
+    // step 2
+    octx.drawImage(oc, 0, 0, oc.width * 0.5, oc.height * 0.5);
+
+    // step 3, resize to final size
+    ctx.drawImage(oc, 0, 0, oc.width * 0.5, oc.height * 0.5,
+        0, 0, canvas.width, canvas.height);
+
+    context.putImageData(imageData, 0, 0);
 }
 
-
-// let resize = function ( ) {
-//     // set size proportional to image
-//     canvas.height = canvas.width * (image.height / image.width);
-
-//     // step 1 - resize to 50%
-//     var oc = document.createElement('canvas'),
-//         octx = oc.getContext('2d');
-
-//     oc.width = image.width * 0.1;
-//     oc.height = image.height * 0.1;
-//     octx.drawImage(image, 0, 0, oc.width, oc.height);
-
-//     // step 2
-//     octx.drawImage(oc, 0, 0, oc.width * 0.5, oc.height * 0.5);
-
-//     // step 3, resize to final size
-//     ctx.drawImage(oc, 0, 0, oc.width * 0.5, oc.height * 0.5,
-//     0, 0, canvas.width, canvas.height);
-
-//     context.putImageData
-// }
-
 document.getElementById('btnLoad').addEventListener('click', load);
-document.getElementById('btnRotate').addEventListener('click', rotate, createCompare);
+document.getElementById('btnRotate').addEventListener('click', rotate);
 document.getElementById('btnGaussian').addEventListener('click', gaussianBlur);
 document.getElementById('btnMedian').addEventListener('click', median);
 document.getElementById('btnMean').addEventListener('click', mean);
 document.getElementById('btnGray').addEventListener('click', grayScale);
-// document.getElementById('btnMeanGray').addEventListener('click', redMeanGrayScale);
+//document.getElementById('btnMeanGray').addEventListener('click', redMeanGrayScale);
 document.getElementById('btnGrayNTSC').addEventListener('click', grayScaleNTSC);
 document.getElementById('btnMS').addEventListener('click', monoScale);
+document.getElementById('btnR5').addEventListener('click', resize);
