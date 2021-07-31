@@ -22,7 +22,6 @@ let createCompare = function () {
 
 //funciton to rotate the image
 let rotate = function () {
-    createCompare();
     // coletando informações da imagem 
     context.getImageData(0, 0, canvas.width, canvas.height);
     // salvando as iformações anteriores
@@ -219,7 +218,6 @@ let grayScaleNTSC = function () {
 
 //function to apply the Limiarization
 let monoScale = function () {
-    createCompare();
     var threshold = parseInt(prompt("Threshold:"));
     var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     var data = imageData.data;
@@ -232,6 +230,50 @@ let monoScale = function () {
         data[i] = data[i + 1] = data[i + 2] = mono;
     }
     context.putImageData(imageData, 0, 0);
+}
+
+//funciton to resize the image to 4x, 2x, 0.5x, 0.25x 
+let resize = function () {
+    createCompare();
+    let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    var aux = parseFloat(prompt("Resize 4X, 2X, 0.5X, 0.25X"));
+    var maxWidth = imageData.width * aux;
+    var maxHeight = imageData.height * aux;
+    var width = imageData.width;
+    var height = imageData.height;
+
+    if (aux === 4 || 2) {
+        if (width > height) {
+            if (width < maxWidth) {
+                height = height * (maxWidth / width);
+                width = maxWidth;
+            }
+        } else {
+            if (height < maxHeight) {
+                width = width * (maxHeight / height);
+                height = maxHeight;
+            }
+        }
+    }
+
+    if (aux === 0.5 || 0.25) {
+        if (width > height) {
+            if (width > maxWidth) {
+                height = height * (maxWidth / width);
+                width = maxWidth;
+            }
+        } else {
+            if (height < maxHeight) {
+                width = width * (maxHeight / height);
+                height = maxHeight;
+            }
+        }
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+
+    context.drawImage(image, 0, 0, width, height);
 }
 
 class RGBColor {
@@ -266,30 +308,6 @@ class MatrixImage {
     }
 }
 
-//function to resize the image
-let resize = function () {
-    createCompare();
-    // set size proportional to image
-    canvas.height = canvas.width * (image.height / image.width);
-
-    // step 1 - resize to 50%
-    var oc = document.createElement('canvas'),
-        octx = oc.getContext('2d');
-
-    oc.width = image.width * 0.1;
-    oc.height = image.height * 0.1;
-    octx.drawImage(image, 0, 0, oc.width, oc.height);
-
-    // step 2
-    octx.drawImage(oc, 0, 0, oc.width * 0.5, oc.height * 0.5);
-
-    // step 3, resize to final size
-    ctx.drawImage(oc, 0, 0, oc.width * 0.5, oc.height * 0.5,
-        0, 0, canvas.width, canvas.height);
-
-    context.putImageData(imageData, 0, 0);
-}
-
 document.getElementById('btnLoad').addEventListener('click', load);
 document.getElementById('btnRotate').addEventListener('click', rotate);
 document.getElementById('btnGaussian').addEventListener('click', gaussianBlur);
@@ -299,4 +317,5 @@ document.getElementById('btnGray').addEventListener('click', grayScale);
 //document.getElementById('btnMeanGray').addEventListener('click', redMeanGrayScale);
 document.getElementById('btnGrayNTSC').addEventListener('click', grayScaleNTSC);
 document.getElementById('btnMS').addEventListener('click', monoScale);
-document.getElementById('btnR5').addEventListener('click', resize);
+document.getElementById('btnRS').addEventListener('click', resize);
+document.getElementById('btnCp').addEventListener('click', createCompare);
